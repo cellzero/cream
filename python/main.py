@@ -9,7 +9,7 @@ def Draw():
     glFlush()
  
 glutInit()
-glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA)
+glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA )
 glutInitWindowSize(400, 400)
 glutCreateWindow( b"test" )
 glutDisplayFunc(Draw)
