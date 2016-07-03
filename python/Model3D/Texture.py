@@ -1,66 +1,27 @@
 #coding=utf-8
 
 #===================================================
-# ¼ÇÂ¼±íÃæ²ÄÖÊ£¬Èç£ºÕÛÉä¡¢·´ÉäÏµÊýµÈ¡£
-# Ä¿Ç°²»¿¼ÂÇÌùÍ¼¡£ 
+# è®°å½•è¡¨é¢æè´¨ï¼Œå¦‚ï¼šæŠ˜å°„ã€åå°„ç³»æ•°ç­‰ã€‚
+# ç›®å‰ä¸è€ƒè™‘è´´å›¾ã€‚ 
 #===================================================
 
 class Texture:
 	
-	
 	def __init__( self ):
-		# ¹âÕÕ·´ÉäÏµÊý£¬¶ÔÓ¦Êý¾ÝÎª(r, g, b, a)
-		self.Ka = [ 1.0, 1.0, 1.0, 1.0 ]	# ambient »·¾³¹â
-		self.Kd = [ 0.0, 0.0, 0.0, 1.0 ]	# diffuse É¢Éä¹â
-		self.Ks = [ 0.0, 0.0, 0.0, 1.0 ]	# specular ¾µÃæ¹â
-		self.Ke = [ 0.0, 0.0, 0.0, 1.0 ]	# emissive ·ÅÉä¹â
-		# ·¢¹âÌåÊôÐÔ
-		self.Ns = 0	# shininess ¹âÁÁ¶È
-		self.Ni = 0	# optical density ¹âÃÜ¶È
-		# alpha Í¸Ã÷ÊôÐÔ
+		# å…‰ç…§åå°„ç³»æ•°ï¼Œå¯¹åº”æ•°æ®ä¸º(r, g, b, a)
+		self.Ka = [ 1.0, 1.0, 1.0, 1.0 ]	# ambient çŽ¯å¢ƒå…‰
+		self.Kd = [ 0.0, 0.0, 0.0, 1.0 ]	# diffuse æ•£å°„å…‰
+		self.Ks = [ 0.0, 0.0, 0.0, 1.0 ]	# specular é•œé¢å…‰
+		self.Ke = [ 0.0, 0.0, 0.0, 1.0 ]	# emissive æ”¾å°„å…‰
+		# å‘å…‰ä½“å±žæ€§
+		self.Ns = 0	# shininess å…‰äº®åº¦
+		self.Ni = 0	# optical density å…‰å¯†åº¦
+		# alpha é€æ˜Žå±žæ€§
 		self.d = 1
 		self.Tr = 0
-		# ·´¹â³Ì¶È
-		self.sharpness = 2	# sharpness Èñ¶È
-		self.illum = 2		# illumination ÕÕÃ÷¶È
-		# Í¸ÉäÂË²¨£¬¶ÔÓ¦Êý¾ÝÎª(r, g, b, a)
+		# åå…‰ç¨‹åº¦
+		self.sharpness = 2	# sharpness é”åº¦
+		self.illum = 2		# illumination ç…§æ˜Žåº¦
+		# é€å°„æ»¤æ³¢ï¼Œå¯¹åº”æ•°æ®ä¸º(r, g, b, a)
 		self.Tf = [ 1.0, 1.0, 1.0, 1.0 ]
 	
-	def set( self, key, values ):
-		self.param_dict.get(key)( self, values )
-	
-	def setNs( self, values ):
-		self.Ns = int(values[0])
-	
-	def setD( self, values ):
-		self.D = int(values[0])
-	
-	def setTr( self, values ):
-		self.Tr = int(values[0])
-		
-	def setIllum( self, values ):
-		self.illum = int(values[0])
-	
-	def setRGBA( self, param, values ):
-		param[0] = float(values[0])
-		param[1] = float(values[1])
-		param[2] = float(values[2])
-		param[3] = float(values[3]) if len(values) > 3 else 1.0
-	
-	def setTf( self, values ):
-		self.setRGBA( self.Tf, values )
-	
-	def setKa( self, values ):
-		self.setRGBA( self.Ka, values )
-	
-	def setKd( self, values ):
-		self.setRGBA( self.Kd, values )
-	
-	def setKs( self, values ):
-		self.setRGBA( self.Ks, values )
-	
-	# ²ÎÊýÃû³Æ×Öµä
-	param_dict = { 'Ns' : setNs, 'd' : setD, 
-		'Tr' : setTr, 'Tf' : setTf, 'illum' : setIllum, 
-		'Ka' : setKa, 'Kd' : setKd, 'Ks' : setKs
-	}
