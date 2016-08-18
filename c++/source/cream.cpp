@@ -14,11 +14,20 @@ void cream::onMouseButton(int button, int action)
 }
 void cream::onMouseMove(int x, int y)
 {
-	//cout << x << " " << y << endl;
+	const float delta_unit_x = 360.0f / this->windowWidth*PI/180.0f;
+	const float delta_unit_y = 360.0f / this->windowHeight*PI / 180.0f;
+	if(mouse_lef_btn_pressed){
+		horizontalAngle -= delta_unit_x * (x - mouse_pos_x);
+		verticalAngle += delta_unit_y * (y - mouse_pos_y);
+		verticalAngle = glm::clamp(verticalAngle, -PI/2, PI/2);
+		//cout << verticalAngle << endl;
+	}
+	mouse_pos_x = x;
+	mouse_pos_y = y;
 }
 void cream::onMouseWheel(int pos)
 {
-	cout << pos << endl;
+	radius -= pos;
 }
 void cream::error_callback(int error, const char * description)
 {
@@ -29,10 +38,9 @@ void cream::compute_matrices()
 }
 cream::cream() {
 	cream_pointer = this;
-	windowWidth = 800;
-	windowHeight = 600;
-	gl_major_version = 3;
-	gl_minor_version = 3;
+	windowWidth = 800;	windowHeight = 600;
+	//set opengl version 
+	gl_major_version = 3;	gl_minor_version = 3;
 }
 
 cream::~cream()
@@ -71,7 +79,7 @@ GLFWwindow* cream::initWindow() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
 
 																   // Open a window and create its OpenGL context
-	window = glfwCreateWindow(1024, 768, "Simple example", NULL, NULL);
+	window = glfwCreateWindow(this->windowWidth, this->windowHeight, "Simple example", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -134,6 +142,9 @@ void cream::startup()
 	// Cull triangles which normal is not towards the camera
 	glEnable(GL_CULL_FACE);
 
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// Create and compile our GLSL program from the shaders
 	this->programID = LoadShaders("../source/shader/StandardShading.vertexshader", "../source/shader/StandardShading.fragmentshader");
 	// Load the texture using any two methods
@@ -143,20 +154,6 @@ void cream::startup()
 
 	glGenVertexArrays(1, &(this->VertexArrayID));
 	glBindVertexArray(this->VertexArrayID);
-
-	// Projection matrix : 45бу Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
-
-	// Camera matrix
-	View = glm::lookAt(
-		glm::vec3(4, 4, 4), // Camera is at (4,3,3), in World Space
-		glm::vec3(0, 0, 0), // and looks at the origin
-		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-	);
-	// Model matrix : an identity matrix (model will be at the origin)
-	Model = glm::mat4(1.0f);
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	MVP = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
 	// Get uniforms' ID of variables in shader
 	MatrixID = glGetUniformLocation(programID, "MVP");
@@ -182,10 +179,31 @@ void cream::startup()
 	glGenBuffers(1, &uvbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
 	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+
+	//set initial mouse position
+	getMousePosition(mouse_pos_x, mouse_pos_y);
+	horizontalAngle = 0;
+	verticalAngle = 0;
+	radius = 4;
+
+	fps = 0;
+	lastTime = glfwGetTime();
+	//init text2d
+	initText2D("../source/texture/Holstein.DDS");
 }
 
 void cream::render(double currentTime)
 {
+	//calculate fps
+	fps++;
+	if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1sec ago
+										 // printf and reset
+		char window_title[100];
+		sprintf(window_title,"fps=%d", fps);
+		setWindowTitle(window_title);
+		fps = 0;
+		lastTime = currentTime;
+	}
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -194,12 +212,31 @@ void cream::render(double currentTime)
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform
+	
+	Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	glm::vec3 direction(
+		cos(verticalAngle) * sin(horizontalAngle),
+		sin(verticalAngle),
+		cos(verticalAngle) * cos(horizontalAngle)
+	);
+	glm::vec3 position = glm::mat3(radius) * direction;
+	View = glm::lookAt(
+		position,
+		glm::vec3(0, 0, 0), // and looks at the origin
+		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+	);
+	Model = glm::mat4(1.0f);
+	MVP = Projection * View * Model; // Remember, matrix multiplication is the other way around
+
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &Model[0][0]);
 	glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &View[0][0]);
 
+	//set light position
 	glm::vec3 lightPos = glm::vec3(4, 4, 4);
 	glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+	//glUniform3f(LightID, position.x,position.y,position.z);
+
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, TextureID);
@@ -246,6 +283,10 @@ void cream::render(double currentTime)
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
+
+	char text[256];
+	sprintf(text, "%.2f sec", glfwGetTime());
+	printText2D(text, 10, 500, 40);
 }
 
 void cream::shutdown()

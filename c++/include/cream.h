@@ -1,9 +1,11 @@
 #pragma once
 // Include standard headers
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
 #include <iostream>
+#include <cmath>
 // Include GLEW. Always include it before gl.h and glfw.h, since it's a bit magic.
 #include <GL/glew.h>
 // Include GLFW
@@ -15,9 +17,11 @@
 #include "common/shader.hpp"
 #include "common/texture.hpp"
 #include "common/objloader.hpp"
+#include "common\text2D.hpp"
 
 using namespace glm;
 using namespace std;
+#define PI (3.1415925f)
 
 class cream;
 static cream * cream_pointer;
@@ -30,6 +34,7 @@ private:
 	int windowWidth,windowHeight;
 	int gl_major_version, gl_minor_version;
 	glm::mat4 View, Model, Projection, MVP;
+	glm::vec3 camera_pos;
 
 	/* IDs */
 	GLuint programID; //shader program
@@ -46,6 +51,14 @@ private:
 	GLuint LightID;
 	/* buffer */
 	GLuint vertexbuffer, uvbuffer, colorbuffer, normalbuffer;
+
+	GLfloat verticalAngle, horizontalAngle;  //in radian
+	GLfloat radius;
+
+	int mouse_pos_x, mouse_pos_y;
+
+	int fps;
+	double lastTime;
 
 	/* mouse and keyboard control */
 	bool mouse_lef_btn_pressed = false;

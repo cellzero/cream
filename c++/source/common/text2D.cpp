@@ -7,10 +7,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "shader.hpp"
-#include "texture.hpp"
+#include <common/shader.hpp>
+#include <common/texture.hpp>
 
-#include "text2D.hpp"
+#include <common/text2D.hpp>
 
 unsigned int Text2DTextureID;
 unsigned int Text2DVertexBufferID;
@@ -28,7 +28,7 @@ void initText2D(const char * texturePath){
 	glGenBuffers(1, &Text2DUVBufferID);
 
 	// Initialize Shader
-	Text2DShaderID = LoadShaders( "TextVertexShader.vertexshader", "TextVertexShader.fragmentshader" );
+	Text2DShaderID = LoadShaders( "../source/shader/TextVertexShader.vertexshader", "../source/shader/TextVertexShader.fragmentshader" );
 
 	// Initialize uniforms' IDs
 	Text2DUniformID = glGetUniformLocation( Text2DShaderID, "myTextureSampler" );
@@ -62,7 +62,7 @@ void printText2D(const char * text, int x, int y, int size){
 		float uv_y = (character/16)/16.0f;
 
 		glm::vec2 uv_up_left    = glm::vec2( uv_x           , uv_y );
-		glm::vec2 uv_up_right   = glm::vec2( uv_x+1.0f/16.0f, uv_y );
+		glm::vec2 uv_up_right   = glm::vec2( uv_x+1.0f/16.0f, uv_y ); 
 		glm::vec2 uv_down_right = glm::vec2( uv_x+1.0f/16.0f, (uv_y + 1.0f/16.0f) );
 		glm::vec2 uv_down_left  = glm::vec2( uv_x           , (uv_y + 1.0f/16.0f) );
 		UVs.push_back(uv_up_left   );

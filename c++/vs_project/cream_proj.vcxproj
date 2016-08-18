@@ -20,10 +20,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\common\objloader.cpp" />
+    <ClCompile Include="..\source\common\text2D.cpp" />
     <ClCompile Include="..\source\common\texture.cpp" />
     <ClCompile Include="..\source\cream.cpp" />
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\common\shader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\shader\StandardShading.fragmentshader" />
+    <None Include="..\source\shader\StandardShading.vertexshader" />
+    <None Include="..\source\shader\TextVertexShader.fragmentshader" />
+    <None Include="..\source\shader\TextVertexShader.vertexshader" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0A567693-1A0B-4EBF-8286-107FDB906FD3}</ProjectGuid>
