@@ -1,7 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
-from OpenGL.GL.shaders import compileShader, compileProgram
 from shader import BaseShaderProgram
+from object import Object
+import os
 import sys
 
 WIDTH = 640
@@ -23,6 +24,7 @@ g_vertex_buffer_data = [
     0.0, 1.0, 0.0
 ]
 
+
 def reshape(w, h):
     """TODO"""
     glViewport(0, 0, w, h)
@@ -33,10 +35,11 @@ def display():
 
     glUseProgram(triangle_program_id)
 
+    size = int(len(g_vertex_buffer_data) / 3)
     glEnableVertexAttribArray(0)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
-    glDrawArrays(GL_TRIANGLES, 0, 3)
+    glDrawArrays(GL_TRIANGLES, 0, size)
     glDisableVertexAttribArray(0)
 
     glutSwapBuffers()
@@ -63,7 +66,6 @@ def motion(x1, y1):
     pass
 
 
-
 def init_opengl():
     """set opengl parameter"""
     # depth test
@@ -79,6 +81,7 @@ def init_texture():
 
 def init_glut(argv):
     """glut initialization."""
+    global window
     glutInit(argv)
     glutInitWindowSize(WIDTH, HEIGHT)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
@@ -95,8 +98,8 @@ def init_glut(argv):
 
 def init_shader():
     """load shader and set initial value"""
-    global triangle_program_id,uniforms,uniform_loc
-    triangle_program_id =  BaseShaderProgram("shaders/v_none.glsl", "shaders/f_green.glsl").program_id
+    global triangle_program_id, uniforms, uniform_loc
+    triangle_program_id = BaseShaderProgram("shaders/v_none.glsl", "shaders/f_green.glsl").program_id
 
     for uniform in uniforms:
         uniform_loc[uniform] = glGetUniformLocation(triangle_program_id, uniform)
@@ -104,10 +107,15 @@ def init_shader():
 
 def init_object():
     """load object data"""
-    global vertex_buffer_id, vertex_array_id
+    global vertex_buffer_id, vertex_array_id, g_vertex_buffer_data
     # VAO
     vertex_array_id = glGenVertexArrays(1)
     glBindVertexArray(vertex_array_id)
+
+    tmp_obj = Object(os.path.join('..', 'resources', 'box.obj'))
+    g_vertex_buffer_data = []
+    for (_, group) in tmp_obj.group.items():
+        g_vertex_buffer_data.extend(group.vertices)
 
     vertex_buffer_id = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
