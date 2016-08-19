@@ -16,8 +16,11 @@ vertex_array_id = 0
 vertex_buffer_id = 0
 triangle_program_id = 0
 
+# uniform variables
 uniform_loc = {}
 uniforms = []
+ 
+
 g_vertex_buffer_data = [
     -1.0, -1.0, 0.0,
     1.0, -1.0, 0.0,
@@ -46,7 +49,10 @@ def display():
 
 
 def keyboard(key, x, y):
-    print('key down', key, x, y)
+    global window
+    if key == ESC:
+        glutDestroyWindow(window)
+        sys.exit(0)
 
 
 def mouse(button, state, x, y):
@@ -107,7 +113,7 @@ def init_shader():
 
 def init_object():
     """load object data"""
-    global vertex_buffer_id, vertex_array_id, g_vertex_buffer_data
+    global vertex_buffer_id, vertex_array_id
     # VAO
     vertex_array_id = glGenVertexArrays(1)
     glBindVertexArray(vertex_array_id)
