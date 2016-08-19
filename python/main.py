@@ -12,13 +12,13 @@ ESC = b'\033'
 SIZE_OF_FLOAT = 4
 
 window = 0
-g_obj = None
 vertex_array_id = 0
 vertex_buffer_id = 0
 uv_buffer_id = 0
 texture_id = 0
 program_id = 0
 
+# uniform variables
 uniform_loc = {}
 uniforms = ['myTextureSampler']
 g_vertex_buffer_data = [
@@ -58,7 +58,10 @@ def display():
 
 
 def keyboard(key, x, y):
-    print('key down', key, x, y)
+    global window
+    if key == ESC:
+        glutDestroyWindow(window)
+        sys.exit(0)
 
 
 def mouse(button, state, x, y):
