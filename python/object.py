@@ -1,4 +1,5 @@
 import os
+from texture import load_texture
 
 
 class Object:
@@ -89,9 +90,13 @@ class Object:
                 m.Ke[1] = float(params[1])
                 m.Ke[2] = float(params[2])
             elif line.find('map_Ka') == 0:
-                m.map_Ka = params[0]
+                m.map_Ka_str = params[0]
+                p = os.path.split(path)[0]
+                m.map_Ka_id = load_texture(os.path.join(p, m.map_Ka_str))
             elif line.find('map_Kd') == 0:
-                m.map_Kd = params[0]
+                m.map_Kd_str = params[0]
+                p = os.path.split(path)[0]
+                m.map_Kd_id = load_texture(os.path.join(p, m.map_Kd_str))
         f_mtl.close()
 
 
@@ -126,8 +131,10 @@ class Material:
         self.Kd = [0.0, 0.0, 0.0]  # 漫反射
         self.Ks = [0.0, 0.0, 0.0]  # 镜面反射
         self.Ke = [0.0, 0.0, 0.0]  # TODO
-        self.map_Ka = ''  # 阴影色纹理贴图
-        self.map_Kd = ''  # 固有色纹理贴图
+        self.map_Ka_str = ''  # 阴影色纹理贴图
+        self.map_Kd_str = ''  # 固有色纹理贴图
+        self.map_Ka_id = 0
+        self.map_Kd_id = 0
 
 
 m_empty = Material()
