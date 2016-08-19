@@ -32,7 +32,6 @@ class BaseShaderProgram:
         glDeleteShader(v_id)
         glDeleteShader(frag_id)
 
-    @staticmethod
     def add_shader(self, shader_str, shader_type):
         """
         Helper function for loading and compiling a GLSL shader

@@ -1,6 +1,7 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GL.shaders import compileShader, compileProgram
+from shader import BaseShaderProgram
 import sys
 
 WIDTH = 640
@@ -11,30 +12,16 @@ SIZE_OF_FLOAT = 4
 
 window = 0
 vertex_array_id = 0
-vertex_buffer = 0
-triangle_program = 0
+vertex_buffer_id = 0
+triangle_program_id = 0
+
+uniform_loc = {}
+uniforms = []
 g_vertex_buffer_data = [
     -1.0, -1.0, 0.0,
     1.0, -1.0, 0.0,
     0.0, 1.0, 0.0
 ]
-g_vertex_shader_str = """
-#version 330 core
-layout(location = 0) in vec3 vertexPosition_modelSpace;
-void main(){
-gl_Position.xyz = vertexPosition_modelSpace;
-gl_Position.w = 1.0;
-}
-"""
-g_fragment_shader_str = """
-#version 330 core
-out vec3 color;
-void main()
-{
-color = vec3(1,0,0);
-}
-"""
-
 
 def reshape(w, h):
     """TODO"""
@@ -42,13 +29,16 @@ def reshape(w, h):
 
 
 def display():
-    glClear(GL_COLOR_BUFFER_BIT)
-    glUseProgram(triangle_program)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+    glUseProgram(triangle_program_id)
+
     glEnableVertexAttribArray(0)
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
     glDrawArrays(GL_TRIANGLES, 0, 3)
     glDisableVertexAttribArray(0)
+
     glutSwapBuffers()
 
 
@@ -68,8 +58,10 @@ def update(val):
         # glutTimerFunc(int(1000 / FPS), update, 1)
 
 
-def load_shader():
-    """TODO """
+def motion(x1, y1):
+    # print(x1," ",y1)
+    pass
+
 
 
 def init_opengl():
@@ -78,19 +70,11 @@ def init_opengl():
     glEnable(GL_DEPTH_TEST)
     glDepthFunc(GL_LEQUAL)
 
-    global vertex_buffer, vertex_array_id
     glClearColor(0.0, 0.0, 0.4, 0.0)
-    # VAO
-    vertex_array_id = glGenVertexArrays(1)
-    glBindVertexArray(vertex_array_id)
-    vertex_buffer = glGenBuffers(1)
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
-    array_type = (GLfloat * len(g_vertex_buffer_data))
-    glBufferData(
-        GL_ARRAY_BUFFER, len(g_vertex_buffer_data) * SIZE_OF_FLOAT,
-        array_type(*g_vertex_buffer_data), GL_STATIC_DRAW)
 
 
+def init_texture():
+    pass
 
 
 def init_glut(argv):
@@ -108,21 +92,29 @@ def init_glut(argv):
     glutMotionFunc(motion)
     glutTimerFunc(int(1000 / FPS), update, 1)
 
-def motion(x1, y1):
-    print(x1," ",y1)
 
 def init_shader():
     """load shader and set initial value"""
-    global triangle_program
-    # Shader
-    triangle_program = compileProgram(
-        compileShader(g_vertex_shader_str, GL_VERTEX_SHADER),
-        compileShader(g_fragment_shader_str, GL_FRAGMENT_SHADER)
-    pass
+    global triangle_program_id,uniforms,uniform_loc
+    triangle_program_id =  BaseShaderProgram("shaders/v_none.glsl", "shaders/f_green.glsl").program_id
+
+    for uniform in uniforms:
+        uniform_loc[uniform] = glGetUniformLocation(triangle_program_id, uniform)
+
 
 def init_object():
     """load object data"""
-    pass
+    global vertex_buffer_id, vertex_array_id
+    # VAO
+    vertex_array_id = glGenVertexArrays(1)
+    glBindVertexArray(vertex_array_id)
+
+    vertex_buffer_id = glGenBuffers(1)
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
+    vertex_buffer = (GLfloat * len(g_vertex_buffer_data))(*g_vertex_buffer_data)
+    glBufferData(GL_ARRAY_BUFFER, len(g_vertex_buffer_data) * SIZE_OF_FLOAT,
+                 vertex_buffer, GL_STATIC_DRAW)
+
 
 def main(argv=None):
     global window
@@ -132,7 +124,9 @@ def main(argv=None):
     init_glut(argv)
     init_opengl()
     init_shader()
+    init_texture()
     init_object()
     glutMainLoop()
+
 
 main()
