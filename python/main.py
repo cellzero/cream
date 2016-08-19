@@ -36,25 +36,6 @@ color = vec3(1,0,0);
 """
 
 
-def init():
-    global vertex_buffer, vertex_array_id, triangle_program
-    glClearColor(0.0, 0.0, 0.4, 0.0)
-    # VAO
-    vertex_array_id = glGenVertexArrays(1)
-    glBindVertexArray(vertex_array_id)
-    vertex_buffer = glGenBuffers(1)
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
-    array_type = (GLfloat * len(g_vertex_buffer_data))
-    glBufferData(
-        GL_ARRAY_BUFFER, len(g_vertex_buffer_data) * SIZE_OF_FLOAT,
-        array_type(*g_vertex_buffer_data), GL_STATIC_DRAW)
-    # Shader
-    triangle_program = compileProgram(
-        compileShader(g_vertex_shader_str, GL_VERTEX_SHADER),
-        compileShader(g_fragment_shader_str, GL_FRAGMENT_SHADER)
-    )
-
-
 def reshape(w, h):
     """TODO"""
     glViewport(0, 0, w, h)
@@ -71,11 +52,11 @@ def display():
     glutSwapBuffers()
 
 
-def key_down(key, x, y):
+def keyboard(key, x, y):
     print('key down', key, x, y)
 
 
-def mouse_down(button, state, x, y):
+def mouse(button, state, x, y):
     if state == GLUT_DOWN:
         if button == GLUT_LEFT_BUTTON:
             print('left button', x, y)
@@ -91,21 +72,67 @@ def load_shader():
     """TODO """
 
 
-def main():
-    global window
+def init_opengl():
+    """set opengl parameter"""
+    # depth test
+    glEnable(GL_DEPTH_TEST)
+    glDepthFunc(GL_LEQUAL)
 
-    glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+    global vertex_buffer, vertex_array_id
+    glClearColor(0.0, 0.0, 0.4, 0.0)
+    # VAO
+    vertex_array_id = glGenVertexArrays(1)
+    glBindVertexArray(vertex_array_id)
+    vertex_buffer = glGenBuffers(1)
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
+    array_type = (GLfloat * len(g_vertex_buffer_data))
+    glBufferData(
+        GL_ARRAY_BUFFER, len(g_vertex_buffer_data) * SIZE_OF_FLOAT,
+        array_type(*g_vertex_buffer_data), GL_STATIC_DRAW)
+
+
+
+
+def init_glut(argv):
+    """glut initialization."""
+    glutInit(argv)
     glutInitWindowSize(WIDTH, HEIGHT)
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+
     window = glutCreateWindow(b'tutorial 02')
 
-    glutDisplayFunc(display)
     glutReshapeFunc(reshape)
-    glutTimerFunc(int(1000/FPS), update, 1)
-    glutMouseFunc(mouse_down)
-    glutKeyboardFunc(key_down)
+    glutDisplayFunc(display)
+    glutKeyboardFunc(keyboard)
+    glutMouseFunc(mouse)
+    glutMotionFunc(motion)
+    glutTimerFunc(int(1000 / FPS), update, 1)
 
-    init()
+def motion(x1, y1):
+    print(x1," ",y1)
+
+def init_shader():
+    """load shader and set initial value"""
+    global triangle_program
+    # Shader
+    triangle_program = compileProgram(
+        compileShader(g_vertex_shader_str, GL_VERTEX_SHADER),
+        compileShader(g_fragment_shader_str, GL_FRAGMENT_SHADER)
+    pass
+
+def init_object():
+    """load object data"""
+    pass
+
+def main(argv=None):
+    global window
+
+    if argv is None:
+        argv = sys.argv
+    init_glut(argv)
+    init_opengl()
+    init_shader()
+    init_object()
     glutMainLoop()
 
 main()
