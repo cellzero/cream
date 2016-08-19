@@ -20,13 +20,17 @@ program_id = 0
 
 # uniform variables
 uniform_loc = {}
-uniforms = ['myTextureSampler']
+uniforms = ['myTextureSampler',b"MVP"]
 g_vertex_buffer_data = [
     -1.0, -1.0, 0.0,
     1.0, -1.0, 0.0,
     0.0, 1.0, 0.0
 ]
 
+# transform matrix
+ProjectionMatrix = np.identity(4,dtype=np.float32)
+ModelMatrix = np.identity(4,dtype=np.float32)
+ViewMatrix = np.identity(4,dtype=np.float32)
 
 def reshape(w, h):
     """TODO"""
@@ -36,11 +40,22 @@ def reshape(w, h):
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+	
     glUseProgram(program_id)
     # glActiveTexture(GL_TEXTURE0)
     # glBindTexture(GL_TEXTURE_2D, texture_id)
     # glUniform1i(uniform_loc['myTextureSampler'], 0)
 
+	# set transform matrix
+    ProjectionMatrix = perspective(45,4/3,1,100)
+    ViewMatrix = lookAt(
+        np.array([4,4,3]),
+        np.array([0,0,0]),
+        np.array([0,1,0])
+    )
+    MVP = np.dot(ProjectionMatrix.T,ViewMatrix.T).T
+	glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE,c_matrix(MVP))
+	
     # vertex
     glEnableVertexAttribArray(0)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
