@@ -125,8 +125,6 @@ def init_object():
 
 
 def main(argv=None):
-    global window
-
     if argv is None:
         argv = sys.argv
     init_glut(argv)
