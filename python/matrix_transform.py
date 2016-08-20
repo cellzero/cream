@@ -10,7 +10,6 @@ def lookAt(eye,center,up):
     s = normalize(cross(f, up))
     u = normalize(cross(s, f))
 
-    a = -dot(s,eye)
     result = numpy.array([[s[0], u[0], -f[0], 0],
                           [s[1], u[1], -f[1], 0],
                           [s[2], u[2], -f[2], 0],
@@ -31,14 +30,11 @@ def perspective(fovy, aspect, zNear, zFar):
     return Result
 
 def c_matrix(matrix):
-    # print(matrix)
-    matrix_array =  [float(a) for line in matrix.T for a in line]
+    matrix_array =  [float(a) for line in matrix for a in line]
     return (c_float*16)(*matrix_array)
 
-ViewMatrix = lookAt(
-        numpy.array([4,4,3]),
-        numpy.array([0,0,0]),
-        numpy.array([0,1,0])
-)
-print(ViewMatrix)
-print(ViewMatrix.T)
+# ViewMatrix = lookAt(
+#         numpy.array([4,4,3]),
+#         numpy.array([0,0,0]),
+#         numpy.array([0,1,0])
+# )

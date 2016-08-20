@@ -4,6 +4,8 @@ from shader import BaseShaderProgram
 from object import Object
 import os
 import sys
+import numpy as np
+from matrix_transform import *
 
 WIDTH = 640
 HEIGHT = 480
@@ -38,25 +40,28 @@ def reshape(w, h):
 
 
 def display():
+    global vertex_buffer_id,uv_buffer_id
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 	
     glUseProgram(program_id)
-    # glActiveTexture(GL_TEXTURE0)
-    # glBindTexture(GL_TEXTURE_2D, texture_id)
-    # glUniform1i(uniform_loc['myTextureSampler'], 0)
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    glUniform1i(uniform_loc['myTextureSampler'], 0)
 
-	# set transform matrix
-    ProjectionMatrix = perspective(45,4/3,1,100)
+    # set transform matrix
+    ModelMatrix = np.identity(4, 'f')
+    ProjectionMatrix = perspective(45,4/3,0.1,100)
     ViewMatrix = lookAt(
-        np.array([4,4,3]),
+        np.array([1,1,-1]),
         np.array([0,0,0]),
         np.array([0,1,0])
     )
-    MVP = np.dot(ProjectionMatrix.T,ViewMatrix.T).T
-	glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE,c_matrix(MVP))
-	
+    MVP = np.dot(np.dot(ProjectionMatrix.T,ViewMatrix.T),ModelMatrix).T
+    # MVP = np.dot(ProjectionMatrix.T, ViewMatrix.T).T
+    glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE,c_matrix(MVP))
     # vertex
+
     glEnableVertexAttribArray(0)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
@@ -130,8 +135,8 @@ def init_shader():
     """load shader and set initial value"""
     global program_id, uniforms, uniform_loc
     program_id = BaseShaderProgram(
-        'shaders/v_simple_texture.glsl', 'shaders/f_simple_texture.glsl').program_id
-        # 'shaders/v_none.glsl', 'shaders/f_green.glsl').program_id
+        # 'shaders/v_simple_texture.glsl', 'shaders/f_simple_texture.glsl').program_id
+        'shaders/Transform.vs.glsl', 'shaders/f_green.glsl').program_id
 
     for uniform in uniforms:
         uniform_loc[uniform] = glGetUniformLocation(program_id, uniform)
