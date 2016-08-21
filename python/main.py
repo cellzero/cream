@@ -6,6 +6,7 @@ import os
 import sys
 import numpy as np
 from matrix_transform import *
+from math import exp, modf,pi
 
 WIDTH = 640
 HEIGHT = 480
@@ -23,16 +24,23 @@ program_id = 0
 # uniform variables
 uniform_loc = {}
 uniforms = ['myTextureSampler',b"MVP"]
-g_vertex_buffer_data = [
-    -1.0, -1.0, 0.0,
-    1.0, -1.0, 0.0,
-    0.0, 1.0, 0.0
-]
+
+# motion control
+rotating = False
+scaling = False
+(x0,y0)=(0,0)
+
+verticalAngle = 0
+horizontalAngle = 0
+scale_ratio = 1
+
 
 # transform matrix
 ProjectionMatrix = np.identity(4,dtype=np.float32)
 ModelMatrix = np.identity(4,dtype=np.float32)
 ViewMatrix = np.identity(4,dtype=np.float32)
+TranslationMatrix = np.identity(4,dtype=np.float32)
+ScalingMatrix = np.identity(4,dtype=np.float32)
 
 def reshape(w, h):
     """TODO"""
@@ -40,7 +48,8 @@ def reshape(w, h):
 
 
 def display():
-    global vertex_buffer_id,uv_buffer_id
+    global vertex_buffer_id,uv_buffer_id,horizontalAngle,verticalAngle
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 	
@@ -50,18 +59,21 @@ def display():
     glUniform1i(uniform_loc['myTextureSampler'], 0)
 
     # set transform matrix
-    ModelMatrix = np.identity(4, 'f')
+    ModelMatrix = np.identity(4,'f')
+    ModelMatrix = rotate(ModelMatrix,verticalAngle,np.array([1,0,0],'f'))
+    ModelMatrix = rotate(ModelMatrix.T,horizontalAngle,np.array([0,1,0],'f'))
+    ModelMatrix = dots(ModelMatrix,scale(scale_ratio,scale_ratio,scale_ratio))
     ProjectionMatrix = perspective(45,4/3,0.1,100)
     ViewMatrix = lookAt(
-        np.array([1,1,-1]),
+        np.array([0,0,3]),
         np.array([0,0,0]),
         np.array([0,1,0])
     )
-    MVP = np.dot(np.dot(ProjectionMatrix.T,ViewMatrix.T),ModelMatrix).T
-    # MVP = np.dot(ProjectionMatrix.T, ViewMatrix.T).T
-    glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE,c_matrix(MVP))
-    # vertex
+    # MVP = np.dot(np.dot(ProjectionMatrix.T,ViewMatrix.T),ModelMatrix.T).T
+    MVP = dots(ProjectionMatrix,ViewMatrix,ModelMatrix)
+    glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_TRUE,c_matrix(MVP))
 
+    # vertex
     glEnableVertexAttribArray(0)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
@@ -85,9 +97,12 @@ def keyboard(key, x, y):
 
 
 def mouse(button, state, x, y):
-    if state == GLUT_DOWN:
-        if button == GLUT_LEFT_BUTTON:
-            print('left button', x, y)
+    global rotating, scaling, x0, y0
+    if button == GLUT_LEFT_BUTTON:
+        rotating = (state == GLUT_DOWN)
+    elif button == GLUT_RIGHT_BUTTON:
+        scaling = (state == GLUT_DOWN)
+    x0, y0 = x, y
 
 
 def update(val):
@@ -95,10 +110,25 @@ def update(val):
         glutPostRedisplay()
         # glutTimerFunc(int(1000 / FPS), update, 1)
 
+def screen2space(x, y):
+    global scale_ratio
+    width, height = glutGet(GLUT_WINDOW_WIDTH),glutGet(GLUT_WINDOW_HEIGHT)
+    radius = min(width, height)*scale_ratio
+    return (2.*x-width)/radius, -(2.*y-height)/radius
 
 def motion(x1, y1):
-    # print(x1," ",y1)
-    pass
+    global x0, y0, scale_ratio,WIDTH,HEIGHT,horizontalAngle,verticalAngle
+    delta_unit_x = 360.0 / WIDTH * pi / 180.0
+    delta_unit_y = 360.0 / HEIGHT * pi / 180.0
+    if rotating:
+        horizontalAngle -= delta_unit_x * (x1 - x0)
+        verticalAngle += delta_unit_y * (y1 - y0)
+        verticalAngle = numpy.clip(verticalAngle, -pi / 2, pi / 2)
+    if scaling:
+        scale_ratio *= exp(((x1 - x0) - (y1 - y0)) * .01)
+    x0, y0 = x1, y1
+    glutPostRedisplay()
+
 
 
 def init_opengl():
@@ -169,6 +199,7 @@ def init_object():
     uv_buffer = (GLfloat * len(uv_buffer_data))(*uv_buffer_data)
     glBufferData(GL_ARRAY_BUFFER, len(uv_buffer_data) * SIZE_OF_FLOAT,
                  uv_buffer, GL_STATIC_DRAW)
+
 
 
 def main(argv=None):
