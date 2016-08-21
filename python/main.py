@@ -6,7 +6,7 @@ import os
 import sys
 import numpy as np
 from matrix_transform import *
-from math import exp, modf,pi
+from math import exp, modf, pi
 
 WIDTH = 640
 HEIGHT = 480
@@ -30,12 +30,11 @@ uniforms = ['myTextureSampler', b"MVP"]
 # motion control
 rotating = False
 scaling = False
-(x0,y0)=(0,0)
+(x0, y0) = (0, 0)
 
 verticalAngle = 0
 horizontalAngle = 0
 scale_ratio = 1
-
 
 g_vertex_buffer_data = [
     -1.0, -1.0, 0.0,
@@ -43,11 +42,12 @@ g_vertex_buffer_data = [
     0.0, 1.0, 0.0
 ]
 # transform matrix
-ProjectionMatrix = np.identity(4,dtype=np.float32)
-ModelMatrix = np.identity(4,dtype=np.float32)
-ViewMatrix = np.identity(4,dtype=np.float32)
-TranslationMatrix = np.identity(4,dtype=np.float32)
-ScalingMatrix = np.identity(4,dtype=np.float32)
+ProjectionMatrix = np.identity(4, dtype=np.float32)
+ModelMatrix = np.identity(4, dtype=np.float32)
+ViewMatrix = np.identity(4, dtype=np.float32)
+TranslationMatrix = np.identity(4, dtype=np.float32)
+ScalingMatrix = np.identity(4, dtype=np.float32)
+
 
 def reshape(w, h):
     """TODO"""
@@ -55,25 +55,27 @@ def reshape(w, h):
 
 
 def display():
-    global g_vertex_buffer_id, g_uv_buffer_id,horizontalAngle,verticalAngle
+    global g_vertex_buffer_id, g_uv_buffer_id, horizontalAngle, verticalAngle
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glUseProgram(program_id)
     # set transform matrix
-    ModelMatrix = np.identity(4,'f')
-    ModelMatrix = rotate(ModelMatrix,verticalAngle,np.array([1,0,0],'f'))
-    ModelMatrix = rotate(ModelMatrix.T,horizontalAngle,np.array([0,1,0],'f'))
+    ModelMatrix = np.identity(4, 'f')
+    ModelMatrix = rotate(ModelMatrix, verticalAngle, np.array([1, 0, 0], 'f'))
+    ModelMatrix = rotate(ModelMatrix.T, horizontalAngle, np.array([0, 1, 0], 'f'))
     matrix_scale = scale(0.05)
-    ModelMatrix = np.dot(ModelMatrix,matrix_scale)
+    matrix_translate = translate(0.0, -1.0, 0.0)
+    ModelMatrix = np.dot(matrix_scale, ModelMatrix)
+    ModelMatrix = np.dot(matrix_translate, ModelMatrix)
     ProjectionMatrix = perspective(45, 4 / 3, 0.1, 100)
     ViewMatrix = lookAt(
         np.array([1, 1, -1]),
         np.array([0, 0, 0]),
         np.array([0, 1, 0])
     )
-    MVP = np.dot(np.dot(ProjectionMatrix.T, ViewMatrix.T), ModelMatrix).T
-    # MVP = np.dot(ProjectionMatrix.T, ViewMatrix.T).T
-    glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE, c_matrix(MVP))
+    MVP = np.dot(np.dot(ProjectionMatrix, ViewMatrix), ModelMatrix)
+    # MVP = np.dot(ProjectionMatrix, ModelMatrix)
+    glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE, c_matrix(MVP.T))
 
     # display
     for i in range(len(g_geom_num)):
@@ -119,14 +121,16 @@ def update(val):
         glutPostRedisplay()
         # glutTimerFunc(int(1000 / FPS), update, 1)
 
+
 def screen2space(x, y):
     global scale_ratio
-    width, height = glutGet(GLUT_WINDOW_WIDTH),glutGet(GLUT_WINDOW_HEIGHT)
-    radius = min(width, height)*scale_ratio
-    return (2.*x-width)/radius, -(2.*y-height)/radius
+    width, height = glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT)
+    radius = min(width, height) * scale_ratio
+    return (2. * x - width) / radius, -(2. * y - height) / radius
+
 
 def motion(x1, y1):
-    global x0, y0, scale_ratio,WIDTH,HEIGHT,horizontalAngle,verticalAngle
+    global x0, y0, scale_ratio, WIDTH, HEIGHT, horizontalAngle, verticalAngle
     delta_unit_x = 360.0 / WIDTH * pi / 180.0
     delta_unit_y = 360.0 / HEIGHT * pi / 180.0
     if rotating:
@@ -137,7 +141,6 @@ def motion(x1, y1):
         scale_ratio *= exp(((x1 - x0) - (y1 - y0)) * .01)
     x0, y0 = x1, y1
     glutPostRedisplay()
-
 
 
 def init_opengl():
@@ -160,7 +163,7 @@ def init_glut(argv):
     glutInitWindowSize(WIDTH, HEIGHT)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
 
-    window = glutCreateWindow(b'tutorial 02')
+    window = glutCreateWindow(b'flower')
 
     glutReshapeFunc(reshape)
     glutDisplayFunc(display)
@@ -175,7 +178,7 @@ def init_shader():
     global program_id, uniforms, uniform_loc
     program_id = BaseShaderProgram(
         'shaders/v_simple_texture.glsl', 'shaders/f_simple_texture.glsl').program_id
-        # 'shaders/Transform.vs.glsl', 'shaders/f_green.glsl').program_id
+    # 'shaders/Transform.vs.glsl', 'shaders/f_green.glsl').program_id
 
     for uniform in uniforms:
         uniform_loc[uniform] = glGetUniformLocation(program_id, uniform)
@@ -213,7 +216,6 @@ def init_object():
         geom_num = int(len(vertex_buffer_data) / 4)
         g_geom_num.append(geom_num)
         g_face_type.append(group.face_type)
-
 
 
 def main(argv=None):
