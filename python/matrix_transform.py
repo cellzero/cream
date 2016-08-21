@@ -60,18 +60,6 @@ def c_matrix(matrix):
     matrix_array = [float(a) for line in matrix for a in line]
     return (c_float * 16)(*matrix_array)
 
-# ViewMatrix = lookAt(
-#         numpy.array([4,4,3]),
-#         numpy.array([0,0,0]),
-#         numpy.array([0,1,0])
-# )
-
-def scale(sx=1., sy=1., sz=1.):
-    return numpy.array(
-            [[sx, 0., 0., 0.],
-	        [0., sy, 0., 0.],
-	        [0., 0., sz, 0.],
-	        [0., 0., 0., 1.]])
 
 def euler_angles(Q):
     w, (x, y, z) = Q
