@@ -1,15 +1,37 @@
 from ctypes import sizeof, c_float, c_void_p, c_uint, string_at
-from numpy import dot,cross
+from numpy import dot, cross
 import numpy
 from math import (cos as _cos, sin as _sin, atan2 as _atan2, asin as _asin,
 sqrt as _sqrt)
 import vector as _v
 
 
-def normalize(vector):
-    return vector/numpy.linalg.norm(vector)
 
-def lookAt(eye,center,up):
+def normalize(vector):
+    return vector / numpy.linalg.norm(vector)
+
+
+def translate(tx=0.0, ty=0.0, tz=0.0):
+    result = numpy.array(
+        [[1., 0., 0., tx],
+         [0., 1., 0., ty],
+         [0., 0., 1., tz],
+         [0., 0., 0., 1.]]
+    )
+    return result
+
+
+def scale(s):
+    result = numpy.array(
+        [[s, 0.0, 0.0, 0.0],
+         [0.0, s, 0.0, 0.0],
+         [0.0, 0.0, s, 0.0],
+         [0.0, 0.0, 0.0, 1.0]]
+    )
+    return result
+
+
+def lookAt(eye, center, up):
     f = normalize(center - eye)
     s = normalize(cross(f, up))
     u = normalize(cross(s, f))
@@ -33,9 +55,10 @@ def perspective(fovy, aspect, zNear, zFar):
     Result[3][2] = - (2 * zFar * zNear) / (zFar - zNear)
     return Result.T
 
+
 def c_matrix(matrix):
-    matrix_array =  [float(a) for line in matrix for a in line]
-    return (c_float*16)(*matrix_array)
+    matrix_array = [float(a) for line in matrix for a in line]
+    return (c_float * 16)(*matrix_array)
 
 # ViewMatrix = lookAt(
 #         numpy.array([4,4,3]),

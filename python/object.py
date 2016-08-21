@@ -1,4 +1,5 @@
 import os
+from OpenGL.GL import *
 from texture import load_texture
 
 
@@ -37,15 +38,21 @@ class Object:
                 tmp_mtl = self.mtl[params[0]]
                 tmp_g.mtl = tmp_mtl
             elif name == 'f':
-                # TODO 假定所有面均为三角形
+                vertex_count = 0
                 for f in params:
                     if len(f) <= 0:
                         continue
+                    vertex_count += 1
                     # 顶点，纹理，法向量
                     v, t, n = f.split('/')
                     tmp_g.vertices.extend(tmp_vs[int(v) - 1])
                     tmp_g.uvs.extend(tmp_vts[int(t) - 1])
                     tmp_g.normals.extend(tmp_vns[int(n) - 1])
+                # face type
+                if vertex_count == 3:
+                    tmp_g.face_type = GL_TRIANGLES
+                elif vertex_count == 4:
+                    tmp_g.face_type = GL_QUADS
         f_obj.close()
 
     def load_mtl(self, path):
@@ -106,6 +113,7 @@ class Group:
         self.vertices = []
         self.uvs = []
         self.normals = []
+        self.face_type = GL_TRIANGLES
 
 
 class Material:
