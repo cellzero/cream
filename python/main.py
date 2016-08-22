@@ -63,13 +63,13 @@ def display():
     ModelMatrix = np.identity(4, 'f')
     ModelMatrix = rotate(ModelMatrix, verticalAngle, np.array([1, 0, 0], 'f'))
     ModelMatrix = rotate(ModelMatrix.T, horizontalAngle, np.array([0, 1, 0], 'f'))
-    matrix_scale = scale(0.05)
+    matrix_scale = scale(0.1)
     matrix_translate = translate(0.0, -1.0, 0.0)
     ModelMatrix = np.dot(matrix_scale, ModelMatrix)
     ModelMatrix = np.dot(matrix_translate, ModelMatrix)
     ProjectionMatrix = perspective(45, 4 / 3, 0.1, 100)
     ViewMatrix = lookAt(
-        np.array([1, 1, -1]),
+        np.array([0, 0, 5]),
         np.array([0, 0, 0]),
         np.array([0, 1, 0])
     )
@@ -78,7 +78,7 @@ def display():
     glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE, c_matrix(MVP.T))
 
     # display
-    for i in range(len(g_geom_num)):
+    for i in range(0, len(g_geom_num)):
         # texture
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, g_texture_id[i])

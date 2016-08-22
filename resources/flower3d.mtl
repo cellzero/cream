@@ -1,7 +1,7 @@
 # 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
-# 创建的文件:19.08.2016 08:58:32
+# 创建的文件:22.08.2016 11:52:58
 
-newmtl stem
+newmtl stem2
 	Ns 32.000000
 	Ni 1.500000
 	d 1.000000
@@ -15,7 +15,7 @@ newmtl stem
 	map_Ka flower3d_stem.jpg
 	map_Kd flower3d_stem.jpg
 
-newmtl leaf
+newmtl leaf2
 	Ns 9.999999
 	Ni 1.500000
 	d 1.000000
@@ -29,7 +29,7 @@ newmtl leaf
 	map_Ka flower3d_leaf.jpg
 	map_Kd flower3d_leaf.jpg
 
-newmtl dirt
+newmtl dirt2
 	Ns 9.999999
 	Ni 1.500000
 	d 1.000000
@@ -43,7 +43,7 @@ newmtl dirt
 	map_Ka flower3d_dirt.jpg
 	map_Kd flower3d_dirt.jpg
 
-newmtl pot
+newmtl pot2
 	Ns 32.000000
 	Ni 1.500000
 	d 1.000000
