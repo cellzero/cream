@@ -115,7 +115,12 @@ def dots(P, *Qs):
     return Result
 
 def rotate(m,angle,v):
-
+    """
+    :param m: should be colunm major
+    :param angle: in degree
+    :param v:
+    :return: in row major
+    """
     c = _cos(angle)
     s = _sin(angle)
 
