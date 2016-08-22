@@ -6,7 +6,7 @@ import os
 import sys
 import numpy as np
 from matrix_transform import *
-from math import exp, modf, pi
+from math import exp, modf, pi, radians
 
 WIDTH = 640
 HEIGHT = 480
@@ -28,19 +28,15 @@ uniform_loc = {}
 uniforms = ['myTextureSampler', b"MVP"]
 
 # motion control
-rotating = False
-scaling = False
-(x0, y0) = (0, 0)
+g_rotating = False
+g_scaling = False
+g_translating = False
 
-verticalAngle = 0
-horizontalAngle = 0
-scale_ratio = 1
+(g_translate_x, g_translate_y) = (0 , 0)
+(g_verticalAngle, g_horizontalAngle) = (0, 0)
+g_scale_ratio = 1
 
-g_vertex_buffer_data = [
-    -1.0, -1.0, 0.0,
-    1.0, -1.0, 0.0,
-    0.0, 1.0, 0.0
-]
+(x0, y0) = (0, 0) #last mouse position
 # transform matrix
 ProjectionMatrix = np.identity(4, dtype=np.float32)
 ModelMatrix = np.identity(4, dtype=np.float32)
@@ -55,26 +51,26 @@ def reshape(w, h):
 
 
 def display():
-    global g_vertex_buffer_id, g_uv_buffer_id, horizontalAngle, verticalAngle
+    global g_vertex_buffer_id, g_uv_buffer_id, g_horizontalAngle, g_verticalAngle
+    global g_scale_ratio, g_translate_x, g_translate_y
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glUseProgram(program_id)
     # set transform matrix
-    ModelMatrix = np.identity(4, 'f')
-    ModelMatrix = rotate(ModelMatrix, verticalAngle, np.array([1, 0, 0], 'f'))
-    ModelMatrix = rotate(ModelMatrix.T, horizontalAngle, np.array([0, 1, 0], 'f'))
-    matrix_scale = scale(0.05)
-    matrix_translate = translate(0.0, -1.0, 0.0)
-    ModelMatrix = np.dot(matrix_scale, ModelMatrix)
+    matrix_scale = scale(g_scale_ratio)
+    ModelMatrix = rotate(matrix_scale.T, g_verticalAngle, np.array([1, 0, 0], 'f'))
+    ModelMatrix = rotate(ModelMatrix.T, g_horizontalAngle, np.array([0, 1, 0], 'f'))
+
+    matrix_translate = translate(g_translate_x, g_translate_y, 0.0)
     ModelMatrix = np.dot(matrix_translate, ModelMatrix)
-    ProjectionMatrix = perspective(45, 4 / 3, 0.1, 100)
+
+    ProjectionMatrix = perspective( radians(45), 4 / 3, 0.1, 100)
     ViewMatrix = lookAt(
-        np.array([1, 1, -1]),
+        np.array([0, 0, 4]),
         np.array([0, 0, 0]),
         np.array([0, 1, 0])
     )
     MVP = np.dot(np.dot(ProjectionMatrix, ViewMatrix), ModelMatrix)
-    # MVP = np.dot(ProjectionMatrix, ModelMatrix)
     glUniformMatrix4fv(uniform_loc[b"MVP"], 1, GL_FALSE, c_matrix(MVP.T))
 
     # display
@@ -108,12 +104,18 @@ def keyboard(key, x, y):
 
 
 def mouse(button, state, x, y):
-    global rotating, scaling, x0, y0
+    global g_rotating, g_scaling, g_translating, x0, y0
     if button == GLUT_LEFT_BUTTON:
-        rotating = (state == GLUT_DOWN)
+        g_rotating = (state == GLUT_DOWN)
     elif button == GLUT_RIGHT_BUTTON:
-        scaling = (state == GLUT_DOWN)
+        g_translating = (state == GLUT_DOWN)
     x0, y0 = x, y
+
+def mouseWheel(button,dir,x,y):
+    global g_scale_ratio
+    g_scale_ratio += dir * 0.1
+    g_scale_ratio = np.clip(g_scale_ratio, 0.05, 10)
+    glutPostRedisplay()
 
 
 def update(val):
@@ -123,22 +125,25 @@ def update(val):
 
 
 def screen2space(x, y):
-    global scale_ratio
+    global g_scale_ratio
     width, height = glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT)
-    radius = min(width, height) * scale_ratio
+    radius = min(width, height) * g_scale_ratio
     return (2. * x - width) / radius, -(2. * y - height) / radius
 
 
 def motion(x1, y1):
-    global x0, y0, scale_ratio, WIDTH, HEIGHT, horizontalAngle, verticalAngle
+    global x0, y0, g_scale_ratio, WIDTH, HEIGHT, g_horizontalAngle, g_verticalAngle
+    global g_translate_x, g_translate_y
     delta_unit_x = 360.0 / WIDTH * pi / 180.0
     delta_unit_y = 360.0 / HEIGHT * pi / 180.0
-    if rotating:
-        horizontalAngle -= delta_unit_x * (x1 - x0)
-        verticalAngle += delta_unit_y * (y1 - y0)
-        verticalAngle = numpy.clip(verticalAngle, -pi / 2, pi / 2)
-    if scaling:
-        scale_ratio *= exp(((x1 - x0) - (y1 - y0)) * .01)
+    if g_rotating:
+        g_horizontalAngle += delta_unit_x * (x1 - x0)
+        g_verticalAngle += delta_unit_y * (y1 - y0)
+        g_verticalAngle = numpy.clip(g_verticalAngle, -pi / 2, pi / 2)
+    if g_translating:
+        g_translate_x += (x1 - x0)/WIDTH * 5
+        g_translate_y -= (y1 - y0)/HEIGHT * 5
+        print(g_translate_x, g_translate_y)
     x0, y0 = x1, y1
     glutPostRedisplay()
 
@@ -169,6 +174,7 @@ def init_glut(argv):
     glutDisplayFunc(display)
     glutKeyboardFunc(keyboard)
     glutMouseFunc(mouse)
+    glutMouseWheelFunc(mouseWheel)
     glutMotionFunc(motion)
     glutTimerFunc(int(1000 / FPS), update, 1)
 
