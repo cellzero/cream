@@ -32,7 +32,7 @@ g_rotating = False
 g_scaling = False
 g_translating = False
 
-(g_translate_x, g_translate_y) = (0, 0)
+(g_translate_x, g_translate_y) = (0, -1.0)
 (g_verticalAngle, g_horizontalAngle) = (0, 0)
 g_scale_ratio = 0.05
 
