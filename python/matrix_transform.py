@@ -146,3 +146,7 @@ def rotate(m,angle,v):
     Result[2] = m[0] * Rotate[2][0] + m[1] * Rotate[2][1] + m[2] * Rotate[2][2]
     Result[3] = m[3]
     return Result.T
+
+
+def clip(x, l, u):
+    return l if x < l else u if x > u else x
