@@ -10,8 +10,8 @@ KEY_S = b's'
 KEY_D = b'd'
 
 class Camera:
-    def __init__(self,  position=np.array([0.0, 1.0, 5.0]),
-                 lightPosition = np.array([0.0, 0.0, 5.0]),
+    def __init__(self,  position=np.array([0.0, 0.0, 3.0]),
+                 lightPosition = np.array([0.0, 0.0, 3.0]),
                  front = np.array([0.0, 0.0, -1.0]),
                  right = np.array([1.0, 0.0, 0.0]),
                  up = np.array([0.0, 1.0, 0.0])
@@ -76,7 +76,7 @@ class Camera:
             self.pitch += yoffset
             self.pitch = clip(self.pitch, -89, 89)
         elif self.translating:
-            self.position += self.up * yoffset
+            self.position += self.up * yoffset/8
         elif self.lightShifting:
             self.lightPosition[0] += xoffset
             self.lightPosition[1] -= yoffset

@@ -23,10 +23,6 @@ uniform_loc = {}
 uniforms = ['myTextureSampler',
             'MVP', 'M', 'V', 'NormalMatrix',
             'lightPos_worldspace',
-            'light.position_worldspace',
-            'light.ambient',
-            'light.diffuse',
-            'light.specular',
             'material.ambient',
             'material.diffuse',
             'material.specular',
@@ -36,17 +32,11 @@ uniforms = ['myTextureSampler',
 # motion control
 g_camera = Camera()
 
-# transform matrix
-ProjectionMatrix = np.identity(4, dtype=np.float32)
-ModelMatrix = np.identity(4, dtype=np.float32)
-ViewMatrix = np.identity(4, dtype=np.float32)
-TranslationMatrix = np.identity(4, dtype=np.float32)
-ScalingMatrix = np.identity(4, dtype=np.float32)
-
 lightPos_worldspace = np.array([0, 0, 3])
 
 #Objects
 boxObj = None
+flowerObj = None
 g_object_list = []
 
 
@@ -57,12 +47,11 @@ def reshape(w, h):
 
 def display():
     global lightPos_worldspace, g_camera
-    global boxObj
+    global boxObj, flowerObj
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glUseProgram(program_id)
     # set transform matrix
-    ModelMatrix = np.identity(4, 'f')
     # matrix_scale = scale(g_scale_ratio)
     # ModelMatrix = rotate(matrix_scale.T, g_verticalAngle, np.array([1, 0, 0], 'f'))
     # ModelMatrix = rotate(ModelMatrix.T, g_horizontalAngle, np.array([0, 1, 0], 'f'))
@@ -71,11 +60,7 @@ def display():
 
     ProjectionMatrix = perspective(radians(g_camera.zoom), 4 / 3, 0.1, 100)
     ViewMatrix = g_camera.getViewMatrix()
-    MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
-
-    glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
     glUniformMatrix4fv(uniform_loc['V'], 1, GL_TRUE, c_matrix(ViewMatrix))
-    glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
 
     # set light parameter
     lightPos = g_camera.getLightPosition()
@@ -84,6 +69,12 @@ def display():
 
     # display
     obj = boxObj
+    ModelMatrix = np.identity(4, 'f')
+    matrix_translate = translate(2, 0, -5)
+    ModelMatrix = dots(matrix_translate, ModelMatrix)
+    MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
+    glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
+    glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
     for i in range(len(obj.geom_nums)):
         glBindVertexArray(obj.vao_ids[i])
         # mtl parameter
@@ -116,7 +107,45 @@ def display():
         glDisableVertexAttribArray(0)
         glDisableVertexAttribArray(1)
         glEnableVertexAttribArray(2)
+        glBindVertexArray(0)
 
+    obj = flowerObj
+    ModelMatrix = scale(0.05)
+    MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
+    glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
+    glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
+    for i in range(len(obj.geom_nums)):
+        glBindVertexArray(obj.vao_ids[i])
+        # mtl parameter
+        mtl = obj.mtl_buffer_list[i]
+        glUniform3f(uniform_loc['material.ambient'], mtl.Ka[0], mtl.Ka[1], mtl.Ka[2])
+        glUniform3f(uniform_loc['material.diffuse'], mtl.Kd[0], mtl.Kd[1], mtl.Kd[2])
+        glUniform3f(uniform_loc['material.specular'], mtl.Ks[0], mtl.Ks[1], mtl.Ks[2])
+
+        # texture
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, obj.texture_ids[i])
+        glUniform1i(uniform_loc['myTextureSampler'], 0)
+
+        # vertex
+        glBindBuffer(GL_ARRAY_BUFFER, obj.vertex_buffer_ids[i])
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
+        # uv
+        glBindBuffer(GL_ARRAY_BUFFER, obj.uv_buffer_ids[i])
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
+        # normal
+        glBindBuffer(GL_ARRAY_BUFFER, obj.normal_buffer_ids[i])
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, None)
+
+        glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(1)
+        glEnableVertexAttribArray(2)
+        # draw
+        glDrawArrays(GL_TRIANGLES, 0, obj.geom_nums[i])
+
+        glDisableVertexAttribArray(0)
+        glDisableVertexAttribArray(1)
+        glEnableVertexAttribArray(2)
         glBindVertexArray(0)
 
     # swap buffer
@@ -195,9 +224,11 @@ def init_shader():
 def init_object():
     """load object data"""
     # read obj file
-    global boxObj
+    global boxObj,flowerObj
     boxObj = Object(os.path.join('..', 'resources', 'box.obj'))
     boxObj.bind_buffer()
+    flowerObj = Object(os.path.join('..', 'resources', 'flower3d.obj'))
+    flowerObj.bind_buffer()
 
 
 def main(argv=None):
