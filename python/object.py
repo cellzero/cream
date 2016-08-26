@@ -1,13 +1,69 @@
 import os
 from OpenGL.GL import *
 from texture import load_texture
-
+SIZE_OF_FLOAT = 4
 
 class Object:
     def __init__(self, path):
         self.mtl = {}
         self.group = {}
         self.load_obj(path)
+        self.texture_ids = []
+        self.vertex_buffer_ids = []
+        self.uv_buffer_ids = []
+        self.normal_buffer_ids = []
+        self.vao_ids = []
+        self.texture_ids = []
+        self.mtl_buffer_list = []
+        self.geom_nums = []
+
+    def bind_buffer(self):
+        for (_, group) in self.group.items():
+            vertex_buffer_data = group.vertices
+            uv_buffer_data = group.uvs
+            normals_buffer_data = group.normals
+
+            # VAO
+            vertex_array_id = glGenVertexArrays(1)
+            glBindVertexArray(vertex_array_id)
+            self.vao_ids.append(vertex_array_id)
+
+            # texture
+            self.texture_ids.append(group.mtl.map_Kd_id)
+
+            # mtl
+            self.mtl_buffer_list.append(group.mtl)
+
+            # VBO
+            # vertex
+            vertex_buffer_id = glGenBuffers(1)
+            glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
+            vertex_buffer = (GLfloat * len(vertex_buffer_data))(*vertex_buffer_data)
+            glBufferData(GL_ARRAY_BUFFER, len(vertex_buffer_data) * SIZE_OF_FLOAT,
+                         vertex_buffer, GL_STATIC_DRAW)
+            self.vertex_buffer_ids.append(vertex_buffer_id)
+            # UV
+            uv_buffer_id = glGenBuffers(1)
+            glBindBuffer(GL_ARRAY_BUFFER, uv_buffer_id)
+            uv_buffer = (GLfloat * len(uv_buffer_data))(*uv_buffer_data)
+            glBufferData(GL_ARRAY_BUFFER, len(uv_buffer_data) * SIZE_OF_FLOAT,
+                         uv_buffer, GL_STATIC_DRAW)
+            self.uv_buffer_ids.append(uv_buffer_id)
+            # normal
+            normal_buffer_id = glGenBuffers(1)
+            glBindBuffer(GL_ARRAY_BUFFER, normal_buffer_id)
+            normal_buffer = (GLfloat * len(normals_buffer_data))(*normals_buffer_data)
+            glBufferData(GL_ARRAY_BUFFER, len(normals_buffer_data) * SIZE_OF_FLOAT,
+                         normal_buffer, GL_STATIC_DRAW)
+            self.normal_buffer_ids.append(normal_buffer_id)
+            # number of geometry
+            geom_num = int(len(vertex_buffer_data) / 3)
+            self.geom_nums.append(geom_num)
+            # g_face_type.append(group.face_type)
+
+            # unbind
+            glBindVertexArray(0)
+
 
     def load_obj(self, path):
         tmp_vs = []
@@ -109,7 +165,7 @@ class Object:
 
 class Group:
     def __init__(self):
-        self.mtl = m_empty
+        self.mtl = None
         self.vertices = []
         self.uvs = []
         self.normals = []

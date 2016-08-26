@@ -11,6 +11,7 @@ KEY_D = b'd'
 
 class Camera:
     def __init__(self,  position=np.array([0.0, 1.0, 5.0]),
+                 lightPosition = np.array([0.0, 0.0, 5.0]),
                  front = np.array([0.0, 0.0, -1.0]),
                  right = np.array([1.0, 0.0, 0.0]),
                  up = np.array([0.0, 1.0, 0.0])
@@ -23,11 +24,13 @@ class Camera:
         self.x0 = 0
         self.y0 = 0
         self.rotating = False
-        self.translating = False
+        self.translating = False  # translate camera y axis
+        self.lightShifting = False # shift light position
         self.mouseSensitivity = 0.1
         self.front = front
         self.right = right
         self.up = up
+        self.lightPosition = lightPosition
         self.updateCameraVectors()
 
 
@@ -41,14 +44,15 @@ class Camera:
 
     def mouse(self, button, state, x, y):
         if button == GLUT_LEFT_BUTTON:
-            self.g_rotating = (state == GLUT_DOWN)
+            self.rotating = (state == GLUT_DOWN)
         elif button == GLUT_RIGHT_BUTTON:
-            self.g_translating = (state == GLUT_DOWN)
+            self.translating = (state == GLUT_DOWN)
+        elif button == GLUT_MIDDLE_BUTTON:
+            self.lightShifting = (state == GLUT_DOWN)
         self.x0, self.y0 = x, y
 
 
     def keyboard(self, key, x, y):
-        # velocity = self.moveSpeed * deltaTime
         velocity = self.moveSpeed * 0.05
 
         if key == KEY_W:
@@ -63,27 +67,28 @@ class Camera:
         glutPostRedisplay()
 
     def motion(self, x1, y1):
+        velocity = self.moveSpeed * 0.05
         xoffset = (x1 - self.x0) * self.mouseSensitivity
         yoffset = (y1 - self.y0) * self.mouseSensitivity
 
-        self.yaw -= xoffset
-        self.pitch += yoffset
+        if self.rotating:
+            self.yaw -= xoffset
+            self.pitch += yoffset
+            self.pitch = clip(self.pitch, -89, 89)
+        elif self.translating:
+            self.position += self.up * yoffset
+        elif self.lightShifting:
+            self.lightPosition[0] += xoffset
+            self.lightPosition[1] -= yoffset
 
-        print('yaw:',self.yaw)
-        print('pitch:', self.pitch)
-
-        self.pitch = clip(self.pitch, -89, 89)
         self.x0, self.y0 = x1, y1
         self.updateCameraVectors()
         glutPostRedisplay()
 
     def getViewMatrix(self):
-        print('position:',self.position)
-        print('front',self.front)
-        print('up', self.up)
-        print('right', self.right)
         return lookAt(self.position, self.position+self.front, self.up)
-        # return lookAt(np.array([0,0,5]), np.array([0,0,0]), self.up)
+        # self.position =self.front *4
+        # return lookAt(self.position, np.array([0,0,0]),np.array([0,1,0]))
 
     def updateCameraVectors(self):
         front_x = cos(radians(self.yaw)) * cos(radians(self.pitch))
@@ -94,5 +99,7 @@ class Camera:
         self.right = normalize(np.cross(self.front,np.array([0.0, 1.0, 0.0])))
         self.up = normalize(np.cross(self.right, self.front))
 
+    def getLightPosition(self):
+        return self.lightPosition
 
 

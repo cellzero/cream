@@ -16,16 +16,9 @@ struct Material
     vec3 specular;
     float shininess;
 };
-struct Light {
-    vec3 position_worldspace;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-};
 uniform vec3 lightPos_worldspace;
 uniform sampler2D myTextureSampler;
 uniform Material material;
-uniform Light light;
 
 void main() {
 
