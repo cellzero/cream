@@ -8,7 +8,7 @@ uniform sampler2D myTextureSampler;
 uniform mat4 MVP;
 uniform mat4 V;
 uniform mat4 M;
-uniform mat3 NormalMatrix;
+//uniform mat3 NormalMatrix;
 uniform vec3 lightPos_worldspace;
 out vec2 UV;
 
@@ -17,7 +17,9 @@ out vec3 normal_cameraspace;
 out vec3 eyeDir_cameraspace;
 out vec3 lightDir_cameraspace;
 
+
 void main() {
+
     gl_Position = MVP * vec4(vertexPos_modelspace, 1.0f);
 
     normal_cameraspace = (V * M * vec4(normal_modelspace,0)).xyz;
@@ -29,7 +31,7 @@ void main() {
     eyeDir_cameraspace = vec3(0,0,0) - vertexPos_cameraspace;
 
     vec3 LightPosition_cameraspace = (V * vec4(lightPos_worldspace,1)).xyz;
-	lightDir_cameraspace = lightDir_cameraspace + eyeDir_cameraspace;
+	lightDir_cameraspace = LightPosition_cameraspace + eyeDir_cameraspace;
 
 	UV = vertexUV.xy;
 }
