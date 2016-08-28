@@ -10,7 +10,7 @@ KEY_S = b's'
 KEY_D = b'd'
 
 class Camera:
-    def __init__(self,  position=np.array([0.0, 0.0, 3.0]),
+    def __init__(self,  position=np.array([0.0, 1.0, 3.0]),
                  lightPosition = np.array([0.0, 0.0, 3.0]),
                  front = np.array([0.0, 0.0, -1.0]),
                  right = np.array([1.0, 0.0, 0.0]),

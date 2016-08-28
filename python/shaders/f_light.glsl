@@ -22,7 +22,7 @@ uniform Material material;
 
 void main() {
 
-    float LightPower = 10;
+    float LightPower = 15;
     vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
 
     float distance = length(lightPos_worldspace - vertexPos_worldspace);

@@ -108,7 +108,7 @@ def display():
         glDisableVertexAttribArray(1)
         glEnableVertexAttribArray(2)
         glBindVertexArray(0)
-
+    # flower3d
     obj = flowerObj
     ModelMatrix = scale(0.05)
     MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
@@ -152,22 +152,6 @@ def display():
     glutSwapBuffers()
 
 
-def keyboard(key, x, y):
-    global window
-    if key == ESC:
-        glutDestroyWindow(window)
-        sys.exit(0)
-
-
-def mouse(button, state, x, y):
-    global g_rotating, g_scaling, g_translating, x0, y0
-    if button == GLUT_LEFT_BUTTON:
-        g_rotating = (state == GLUT_DOWN)
-    elif button == GLUT_RIGHT_BUTTON:
-        g_translating = (state == GLUT_DOWN)
-    x0, y0 = x, y
-
-
 def update(val):
     if val == 1:
         glutPostRedisplay()
@@ -179,6 +163,7 @@ def init_opengl():
     # depth test
     glEnable(GL_DEPTH_TEST)
     glDepthFunc(GL_LEQUAL)
+    glEnable(GL_CULL_FACE)
     # glEnable(GL_LINE_SMOOTH)
     # glEnable(GL_BLEND)
 
