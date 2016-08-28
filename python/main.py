@@ -163,7 +163,7 @@ def init_opengl():
     # depth test
     glEnable(GL_DEPTH_TEST)
     glDepthFunc(GL_LEQUAL)
-    glEnable(GL_CULL_FACE)
+    # glEnable(GL_CULL_FACE)
     # glEnable(GL_LINE_SMOOTH)
     # glEnable(GL_BLEND)
 
