@@ -27,16 +27,20 @@ uniforms = ['myTextureSampler',
             'material.diffuse',
             'material.specular',
             'material.shininess',
+            'light.ambient',
+            'light.diffuse',
+            'light.specular',
             ]
 
 # motion control
 g_camera = Camera()
 
-lightPos_worldspace = np.array([0, 0, 3])
-
+lightPos_worldspace = np.array([0, 2, 1])
+backround_color = [0,0,0]
 #Objects
 boxObj = None
-flowerObj = None
+sunObj = None
+light_shader = None
 g_object_list = []
 
 
@@ -47,9 +51,13 @@ def reshape(w, h):
 
 def display():
     global lightPos_worldspace, g_camera
-    global boxObj, flowerObj
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    global boxObj, flowerObj, light_shader
 
+    if g_camera.getScene() == 'day':
+        glClearColor(0.29, 0.439, 0.882, 0.0)
+    else:
+        glClearColor(0, 0, 0, 0.0)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glUseProgram(program_id)
     # set transform matrix
     # matrix_scale = scale(g_scale_ratio)
@@ -75,6 +83,16 @@ def display():
     MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
     glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
     glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
+    # set light
+    ambient = 0.5
+    glUniform3f(uniform_loc['light.ambient'], ambient, ambient, ambient)
+    glUniform3f(uniform_loc['light.diffuse'], 1, 1, 1)
+    glUniform3f(uniform_loc['light.specular'], 1, 1, 1)
+    if g_camera.getScene() == 'day':
+        glUniform3f(glGetUniformLocation(program_id,'lightColor'), 1, 1, 1)
+    else:
+        glUniform3f(glGetUniformLocation(program_id, 'lightColor'), 20.0/255, 60.0/255, 180.0/255)
+
     for i in range(len(obj.geom_nums)):
         glBindVertexArray(obj.vao_ids[i])
         # mtl parameter
@@ -109,43 +127,30 @@ def display():
         glEnableVertexAttribArray(2)
         glBindVertexArray(0)
     # flower3d
-    obj = flowerObj
-    ModelMatrix = scale(0.05)
+    glUseProgram(light_shader)
+    obj = sunObj
+    ModelMatrix = scale(0.3)
+    matrix_translate = translate(lightPos[0], lightPos[1], lightPos[2])
+    ModelMatrix = dots(matrix_translate, ModelMatrix)
     MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
-    glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
-    glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
+    glUniformMatrix4fv(glGetUniformLocation(light_shader, 'MVP'), 1, GL_TRUE, c_matrix(MVP))
+    if g_camera.getScene() == 'day':
+        glUniform3f(glGetUniformLocation(light_shader, 'lightColor'), 1, 1, 1)
+    else:
+        glUniform3f(glGetUniformLocation(light_shader, 'lightColor'), 20.0 / 255, 60.0 / 255, 180.0 / 255)
     for i in range(len(obj.geom_nums)):
         glBindVertexArray(obj.vao_ids[i])
         # mtl parameter
         mtl = obj.mtl_buffer_list[i]
-        glUniform3f(uniform_loc['material.ambient'], mtl.Ka[0], mtl.Ka[1], mtl.Ka[2])
-        glUniform3f(uniform_loc['material.diffuse'], mtl.Kd[0], mtl.Kd[1], mtl.Kd[2])
-        glUniform3f(uniform_loc['material.specular'], mtl.Ks[0], mtl.Ks[1], mtl.Ks[2])
-
-        # texture
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, obj.texture_ids[i])
-        glUniform1i(uniform_loc['myTextureSampler'], 0)
-
         # vertex
         glBindBuffer(GL_ARRAY_BUFFER, obj.vertex_buffer_ids[i])
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
         # uv
-        glBindBuffer(GL_ARRAY_BUFFER, obj.uv_buffer_ids[i])
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
-        # normal
-        glBindBuffer(GL_ARRAY_BUFFER, obj.normal_buffer_ids[i])
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, None)
-
         glEnableVertexAttribArray(0)
-        glEnableVertexAttribArray(1)
-        glEnableVertexAttribArray(2)
         # draw
         glDrawArrays(GL_TRIANGLES, 0, obj.geom_nums[i])
 
         glDisableVertexAttribArray(0)
-        glDisableVertexAttribArray(1)
-        glEnableVertexAttribArray(2)
         glBindVertexArray(0)
 
     # swap buffer
@@ -167,7 +172,8 @@ def init_opengl():
     # glEnable(GL_LINE_SMOOTH)
     # glEnable(GL_BLEND)
 
-    glClearColor(0.0, 0.0, 0.4, 0.0)
+    # glClearColor(0.29, 0.439, 0.882, 0.0)
+    glClearColor(0,0,0,0)
 
 
 def init_texture():
@@ -182,7 +188,7 @@ def init_glut(argv):
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE)
 
     print(glutGet(GLUT_WINDOW_NUM_SAMPLES))
-    window = glutCreateWindow(b'flower')
+    window = glutCreateWindow(b'CG assignment')
 
     glutReshapeFunc(reshape)
     glutDisplayFunc(display)
@@ -195,11 +201,11 @@ def init_glut(argv):
 
 def init_shader():
     """load shader and set initial value"""
-    global program_id, uniforms, uniform_loc
+    global program_id, uniforms, uniform_loc, light_shader
     program_id = BaseShaderProgram(
         'shaders/v_light.glsl', 'shaders/f_light.glsl').program_id
-    # 'shaders/v_simple_texture.glsl', 'shaders/f_simple_texture.glsl').program_id
-    # 'shaders/Transform.vs.glsl', 'shaders/f_green.glsl').program_id
+    light_shader =BaseShaderProgram(
+        'shaders/v_sun.glsl', 'shaders/f_sun.glsl').program_id
 
 
     for uniform in uniforms:
@@ -209,12 +215,11 @@ def init_shader():
 def init_object():
     """load object data"""
     # read obj file
-    global boxObj,flowerObj
-    boxObj = Object(os.path.join('..', 'resources', 'box.obj'))
+    global boxObj,sunObj
+    boxObj = Object(os.path.join('..', 'resources', 'unknown.obj'))
     boxObj.bind_buffer()
-    flowerObj = Object(os.path.join('..', 'resources', 'flower3d.obj'))
-    flowerObj.bind_buffer()
-
+    sunObj = Object(os.path.join('..', 'resources', 'sun.obj'))
+    sunObj.bind_buffer()
 
 def main(argv=None):
     if argv is None:

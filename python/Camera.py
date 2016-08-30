@@ -8,10 +8,14 @@ KEY_W = b'w'
 KEY_A = b'a'
 KEY_S = b's'
 KEY_D = b'd'
+KEY_J = b'j'
+KEY_K = b'k'
+KEY_T = b't'
+
 
 class Camera:
     def __init__(self,  position=np.array([0.0, 1.0, 3.0]),
-                 lightPosition = np.array([0.0, 0.0, 3.0]),
+                 lightPosition = np.array([2.0, 4.0, -2.0]),
                  front = np.array([0.0, 0.0, -1.0]),
                  right = np.array([1.0, 0.0, 0.0]),
                  up = np.array([0.0, 1.0, 0.0])
@@ -19,7 +23,7 @@ class Camera:
         self.yaw = -90.0
         self.pitch = 0.0
         self.position = position
-        self.zoom = 45.0
+        self.zoom = 90.0
         self.moveSpeed = 1.0
         self.x0 = 0
         self.y0 = 0
@@ -31,13 +35,13 @@ class Camera:
         self.right = right
         self.up = up
         self.lightPosition = lightPosition
+        self.scene = 'day'
         self.updateCameraVectors()
 
 
     def mouseWheel(self, button, dir, x, y):
         self.zoom -= dir
-        self.zoom = clip(self.zoom, 1.0, 60.0)
-        print(self.zoom)
+        self.zoom = clip(self.zoom, 1.0, 180.0)
         self.updateCameraVectors()
         glutPostRedisplay()
 
@@ -63,6 +67,8 @@ class Camera:
             self.position -= self.right * velocity
         elif key == KEY_D:
             self.position += self.right * velocity
+        elif key == KEY_T:
+            self.scene = 'night' if self.scene == 'day' else 'day'
         self.updateCameraVectors()
         glutPostRedisplay()
 
@@ -78,8 +84,8 @@ class Camera:
         elif self.translating:
             self.position += self.up * yoffset/8
         elif self.lightShifting:
-            self.lightPosition[0] += xoffset
-            self.lightPosition[1] -= yoffset
+            self.lightPosition += self.right* xoffset/16
+            self.lightPosition -= self.up *yoffset/16
 
         self.x0, self.y0 = x1, y1
         self.updateCameraVectors()
@@ -99,7 +105,11 @@ class Camera:
         self.right = normalize(np.cross(self.front,np.array([0.0, 1.0, 0.0])))
         self.up = normalize(np.cross(self.right, self.front))
 
+
     def getLightPosition(self):
         return self.lightPosition
 
+
+    def getScene(self):
+        return self.scene
 

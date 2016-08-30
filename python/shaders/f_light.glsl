@@ -16,13 +16,23 @@ struct Material
     vec3 specular;
     float shininess;
 };
+struct Light
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+uniform Light light;
 uniform vec3 lightPos_worldspace;
 uniform sampler2D myTextureSampler;
 uniform Material material;
+uniform vec3 lightColor;
 
 void main() {
 
-    float LightPower = 15;
+//    vec3 lightColor = vec3(20.0/255, 60.0/255, 180.0/255);
+    float LightPower = 20;
     vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
 
     float distance = length(lightPos_worldspace - vertexPos_worldspace);
@@ -34,14 +44,16 @@ void main() {
     vec3 norm = normalize(normal_cameraspace);
     vec3 lightDir = normalize(lightDir_cameraspace);
     float diff = clamp(dot(norm, lightDir), 0, 1);
-    vec3 diffuse = material.diffuse * diff * LightPower* MaterialDiffuseColor/pow(distance,2);
+    vec3 diffuse = lightColor *material.diffuse * diff * LightPower* MaterialDiffuseColor/pow(distance,2);
 
     // Specular
     vec3 viewDir = normalize(eyeDir_cameraspace);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(clamp(dot(viewDir, reflectDir), 0, 1), material.shininess);
-    vec3 specular = material.specular * (LightPower *spec * MaterialDiffuseColor)/pow(distance,2);
+    vec3 specular = lightColor *material.specular * (LightPower *spec * MaterialDiffuseColor)/pow(distance,2);
 
-    vec3 result = ambient + diffuse + specular;
+    vec3 result = light.ambient * ambient +
+                  light.diffuse * diffuse +
+                  light.specular*specular;
     color = vec4(result,1.0f);
 }
