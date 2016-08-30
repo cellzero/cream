@@ -8,6 +8,7 @@ import numpy as np
 from matrix_transform import *
 from math import pi, radians
 from Camera import Camera
+from entity import Entity
 
 WIDTH = 800
 HEIGHT = 600
@@ -42,6 +43,19 @@ boxObj = None
 sunObj = None
 light_shader = None
 g_object_list = []
+g_entity_list = []
+g_entity_description_list = [
+    {'obj_name': 'scene.obj',
+     'position': [0., 0., 0.], 'rotation': [0., 0., 0.], 'scale': [1., 1., 1.]},
+    {'obj_name': 'golden.obj',
+     'position': [0., 0.52, 5.], 'rotation': [0., 0., 0.], 'scale': [0.3, 0.5, 0.5]},
+    {'obj_name': 'red.obj',
+     'position': [-5., 0.52, 0.], 'rotation': [0., 90., 0.], 'scale': [0.3, 0.5, 0.5]},
+    {'obj_name': 'purple.obj',
+     'position': [0., 0.52, -5.], 'rotation': [0., 0., 0.], 'scale': [0.3, 0.5, 0.5]},
+    {'obj_name': 'pink.obj',
+     'position': [5., 0.52, 0.], 'rotation': [0., 0., 0.], 'scale': [0.3, 0.5, 0.5]},
+]
 
 
 def reshape(w, h):
@@ -49,38 +63,20 @@ def reshape(w, h):
     glViewport(0, 0, w, h)
 
 
-def display():
-    global lightPos_worldspace, g_camera
-    global boxObj, flowerObj, light_shader
-
-    if g_camera.getScene() == 'day':
-        glClearColor(0.29, 0.439, 0.882, 0.0)
-    else:
-        glClearColor(0, 0, 0, 0.0)
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glUseProgram(program_id)
-    # set transform matrix
-    # matrix_scale = scale(g_scale_ratio)
-    # ModelMatrix = rotate(matrix_scale.T, g_verticalAngle, np.array([1, 0, 0], 'f'))
-    # ModelMatrix = rotate(ModelMatrix.T, g_horizontalAngle, np.array([0, 1, 0], 'f'))
-    # matrix_translate = translate(g_translate_x, g_translate_y, 0.0)
-    # ModelMatrix = np.dot(matrix_translate, ModelMatrix)
-
-    ProjectionMatrix = perspective(radians(g_camera.zoom), 4 / 3, 0.1, 100)
-    ViewMatrix = g_camera.getViewMatrix()
-    glUniformMatrix4fv(uniform_loc['V'], 1, GL_TRUE, c_matrix(ViewMatrix))
-
-    # set light parameter
-    lightPos = g_camera.getLightPosition()
-    glUniform3f(uniform_loc['lightPos_worldspace'], lightPos[0], lightPos[1], lightPos[2])
-    glUniform1f(uniform_loc['material.shininess'], 32)
-
-    # display
-    obj = boxObj
-    ModelMatrix = np.identity(4, 'f')
-    matrix_translate = translate(2, 0, -5)
-    ModelMatrix = dots(matrix_translate, ModelMatrix)
-    MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
+def draw_entity(entity, projection_matrix, view_matrix):
+    obj = entity.obj
+    model_matrix = np.identity(4, 'f')
+    matrix_scale = scale(entity.scale[0])
+    model_matrix = dots(matrix_scale, model_matrix)
+    if not entity.rotate[0] == 0.:
+        model_matrix = rotate(model_matrix.T, entity.rotate[0], np.array([1., 0., 0.]))
+    if not entity.rotate[1] == 0.:
+        model_matrix = rotate(model_matrix.T, entity.rotate[1], np.array([0., 1., 0.]))
+    if not entity.rotate[2] == 0.:
+        model_matrix = rotate(model_matrix.T, entity.rotate[2], np.array([0., 0., 1.]))
+    matrix_translate = translate(entity.pos[0], entity.pos[1], entity.pos[2])
+    ModelMatrix = dots(matrix_translate, model_matrix)
+    MVP = dots(projection_matrix, view_matrix, ModelMatrix)
     glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
     glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
     # set light
@@ -89,9 +85,9 @@ def display():
     glUniform3f(uniform_loc['light.diffuse'], 1, 1, 1)
     glUniform3f(uniform_loc['light.specular'], 1, 1, 1)
     if g_camera.getScene() == 'day':
-        glUniform3f(glGetUniformLocation(program_id,'lightColor'), 1, 1, 1)
+        glUniform3f(glGetUniformLocation(program_id, 'lightColor'), 1, 1, 1)
     else:
-        glUniform3f(glGetUniformLocation(program_id, 'lightColor'), 20.0/255, 60.0/255, 180.0/255)
+        glUniform3f(glGetUniformLocation(program_id, 'lightColor'), 20.0 / 255, 60.0 / 255, 180.0 / 255)
 
     for i in range(len(obj.geom_nums)):
         glBindVertexArray(obj.vao_ids[i])
@@ -126,6 +122,87 @@ def display():
         glDisableVertexAttribArray(1)
         glEnableVertexAttribArray(2)
         glBindVertexArray(0)
+
+
+def display():
+    global lightPos_worldspace, g_camera
+    global boxObj, flowerObj, light_shader
+
+    if g_camera.getScene() == 'day':
+        glClearColor(0.29, 0.439, 0.882, 0.0)
+    else:
+        glClearColor(0, 0, 0, 0.0)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glUseProgram(program_id)
+    # set transform matrix
+    # matrix_scale = scale(g_scale_ratio)
+    # ModelMatrix = rotate(matrix_scale.T, g_verticalAngle, np.array([1, 0, 0], 'f'))
+    # ModelMatrix = rotate(ModelMatrix.T, g_horizontalAngle, np.array([0, 1, 0], 'f'))
+    # matrix_translate = translate(g_translate_x, g_translate_y, 0.0)
+    # ModelMatrix = np.dot(matrix_translate, ModelMatrix)
+
+    ProjectionMatrix = perspective(radians(g_camera.zoom), 4 / 3, 0.1, 100)
+    ViewMatrix = g_camera.getViewMatrix()
+    glUniformMatrix4fv(uniform_loc['V'], 1, GL_TRUE, c_matrix(ViewMatrix))
+
+    # set light parameter
+    lightPos = g_camera.getLightPosition()
+    glUniform3f(uniform_loc['lightPos_worldspace'], lightPos[0], lightPos[1], lightPos[2])
+    glUniform1f(uniform_loc['material.shininess'], 32)
+
+    # display
+    for entity in g_entity_list:
+        draw_entity(entity, ProjectionMatrix, ViewMatrix)
+    # obj = boxObj
+    # ModelMatrix = np.identity(4, 'f')
+    # matrix_translate = translate(2, 0, -5)
+    # ModelMatrix = dots(matrix_translate, ModelMatrix)
+    # MVP = dots(ProjectionMatrix, ViewMatrix, ModelMatrix)
+    # glUniformMatrix4fv(uniform_loc['M'], 1, GL_TRUE, c_matrix(ModelMatrix))
+    # glUniformMatrix4fv(uniform_loc['MVP'], 1, GL_TRUE, c_matrix(MVP))
+    # # set light
+    # ambient = 0.5
+    # glUniform3f(uniform_loc['light.ambient'], ambient, ambient, ambient)
+    # glUniform3f(uniform_loc['light.diffuse'], 1, 1, 1)
+    # glUniform3f(uniform_loc['light.specular'], 1, 1, 1)
+    # if g_camera.getScene() == 'day':
+    #     glUniform3f(glGetUniformLocation(program_id,'lightColor'), 1, 1, 1)
+    # else:
+    #     glUniform3f(glGetUniformLocation(program_id, 'lightColor'), 20.0/255, 60.0/255, 180.0/255)
+    #
+    # for i in range(len(obj.geom_nums)):
+    #     glBindVertexArray(obj.vao_ids[i])
+    #     # mtl parameter
+    #     mtl = obj.mtl_buffer_list[i]
+    #     glUniform3f(uniform_loc['material.ambient'], mtl.Ka[0], mtl.Ka[1], mtl.Ka[2])
+    #     glUniform3f(uniform_loc['material.diffuse'], mtl.Kd[0], mtl.Kd[1], mtl.Kd[2])
+    #     glUniform3f(uniform_loc['material.specular'], mtl.Ks[0], mtl.Ks[1], mtl.Ks[2])
+    #
+    #     # texture
+    #     glActiveTexture(GL_TEXTURE0)
+    #     glBindTexture(GL_TEXTURE_2D, obj.texture_ids[i])
+    #     glUniform1i(uniform_loc['myTextureSampler'], 0)
+    #
+    #     # vertex
+    #     glBindBuffer(GL_ARRAY_BUFFER, obj.vertex_buffer_ids[i])
+    #     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
+    #     # uv
+    #     glBindBuffer(GL_ARRAY_BUFFER, obj.uv_buffer_ids[i])
+    #     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
+    #     # normal
+    #     glBindBuffer(GL_ARRAY_BUFFER, obj.normal_buffer_ids[i])
+    #     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, None)
+    #
+    #     glEnableVertexAttribArray(0)
+    #     glEnableVertexAttribArray(1)
+    #     glEnableVertexAttribArray(2)
+    #     # draw
+    #     glDrawArrays(GL_TRIANGLES, 0, obj.geom_nums[i])
+    #
+    #     glDisableVertexAttribArray(0)
+    #     glDisableVertexAttribArray(1)
+    #     glEnableVertexAttribArray(2)
+    #     glBindVertexArray(0)
     # flower3d
     glUseProgram(light_shader)
     obj = sunObj
@@ -215,11 +292,17 @@ def init_shader():
 def init_object():
     """load object data"""
     # read obj file
-    global boxObj,sunObj
-    boxObj = Object(os.path.join('..', 'resources', 'unknown.obj'))
-    boxObj.bind_buffer()
+    global sunObj, g_entity_list
+    # boxObj = Object(os.path.join('..', 'resources', 'scene.obj'))
+    # boxObj.bind_buffer()
     sunObj = Object(os.path.join('..', 'resources', 'sun.obj'))
     sunObj.bind_buffer()
+    for descriptor in g_entity_description_list:
+        obj = Object(os.path.join('..', 'resources', descriptor['obj_name']))
+        obj.bind_buffer()
+        entity = Entity(obj, descriptor['position'], descriptor['rotation'], descriptor['scale'])
+        g_entity_list.append(entity)
+
 
 def main(argv=None):
     if argv is None:

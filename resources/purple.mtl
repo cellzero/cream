@@ -1,0 +1,58 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# 创建的文件:30.08.2016 19:17:54
+
+newmtl dirt2
+	Ns 9.999999
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.045000 0.045000 0.045000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka purple_materials\flower3d_dirt.jpg
+	map_Kd purple_materials\flower3d_dirt.jpg
+
+newmtl stem2
+	Ns 9.999999
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.045000 0.045000 0.045000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka purple_materials\flower3d_stem.jpg
+	map_Kd purple_materials\flower3d_stem.jpg
+
+newmtl leaf2
+	Ns 9.999999
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.045000 0.045000 0.045000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka purple_materials\flower3d_leaf.jpg
+	map_Kd purple_materials\flower3d_leaf.jpg
+
+newmtl pot2
+	Ns 32.000000
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.675000 0.675000 0.675000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka purple_materials\flower3d_stem.jpg
+	map_Kd purple_materials\flower3d_stem.jpg
